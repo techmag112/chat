@@ -25,7 +25,7 @@ class EditDataController {
     public function changepass_view(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
            
             echo $this->templates->render('changepass');
@@ -35,7 +35,7 @@ class EditDataController {
     public function changepass(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
             if(Input::exists()) {
                 if(Token::check(Input::get('token'))) {
@@ -75,7 +75,7 @@ class EditDataController {
     public function upload(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
             $result = 'Файла не существует';
             if(isset($_FILES['img'])) {
@@ -98,7 +98,7 @@ class EditDataController {
     public function upload_view(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
             $img = $this->img->getImage();
             echo $this->templates->render('upload', [
@@ -110,17 +110,17 @@ class EditDataController {
     public function update_view(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
             $checked = $this->db->selectValue(
-                'SELECT email_status FROM users_profile WHERE id = ?',
+                'SELECT email_status FROM users WHERE id = ?',
                 [
                     $this->auth->getUserId()
                 ]
             );
             echo $this->templates->render('update', [
                 'username' => $this->auth->getUsername(),
-                'checked' => ($checked ? 'checked' :  '')
+                'checked' => (!$checked ? 'checked' :  '')  
             ]);
         }
     }
@@ -128,16 +128,16 @@ class EditDataController {
     public function update(): void 
     {
         if (!$this->auth->isLoggedIn()) {
-            echo $this->templates->render('login');
+            Redirect::to('/login');
         } else {
             if(Input::exists()) {
                 if(Token::check(Input::get('token'))) {
                         $username = $_POST['username'];
-                        if (isset($_POST['hidemail'])) {
-                            $email_status = $_POST['hidemail'] == 'on' ? 1 : 0;
-                        } else {
-                            $email_status = 0;
-                        }
+                       // if (isset($_POST['hidemail'])) {
+                            $email_status = isset($_POST['hidemail']) ? 0 : 1;
+                       // } else {
+                      //      $email_status = 0;
+                      //  }
                         $checked = $this->db->select(
                             'SELECT username FROM users WHERE username = ? AND id <> ?',
                             [
