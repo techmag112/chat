@@ -313,7 +313,7 @@ const actionListeners = (state, ws) => {
     toggleMenuOff();
     switch (link.getAttribute("data-action")) {
       case "switch":
-        toogleAlarm(state.currentid);
+        toggleAlarm(state.currentid);
         break;
       case "delete":
         deleteMessage(state.currentid);
@@ -326,28 +326,32 @@ const actionListeners = (state, ws) => {
         break;
     }
   }
-  function toogleAlarm(id) {
+  function toggleAlarm(id) {
     const listContact = document.querySelector(".sidebarleft_body");
     let chatContact = listContact.querySelectorAll(".sidebarleft_contact_chat");
     chatContact.forEach(item => {
       if (item.getAttribute("data-id") === id) {
+        // if ((user['id1'] == state.userID) || (user['id2'] == state.userID) || (user['id1'] == 10001)) { 
+        // let alert = ((user['alert1'] === 1 && user['id1'] == state.userID) || (user['alert2'] === 1 && user['id2'] == state.userID)) ? "fa-bell-o" : "fa-bell-slash-o";
         let alarmTag = item.querySelector("#alarm");
         if (alarmTag.className === "fa fa-bell-o") {
           alarmTag.classList.remove("fa-bell-o");
           alarmTag.classList.add("fa-bell-slash-o");
-          state.arr.forEach(el => {
-            if (el["chat_id"] == id) {
-              el["alert"] = "off";
-            }
-          });
+          //state.arr.forEach((el) => {
+          //  if(el["chat_id"] == id) {
+          //    el["alert"] = "off";
+          //  }    
+          //});
+          setFieldAlarm(id);
         } else {
           alarmTag.classList.remove("fa-bell-slash-o");
           alarmTag.classList.add("fa-bell-o");
-          state.arr.forEach(el => {
-            if (el["chat_id"] == id) {
-              el["alert"] = "on";
-            }
-          });
+          //state.arr.forEach((el) => {
+          //  if(el["chat_id"] == id) {
+          //    el["alert"] = "on";
+          //  }    
+          //});
+          setFieldAlarm(id);
         }
       }
     });
@@ -631,6 +635,7 @@ const actionListeners = (state, ws) => {
                         `;
       chatContext.insertAdjacentHTML("beforeend", newMessage);
     }
+    alarmCheck(getReceiverChatIdfromUserId(receiverUserId), receiverUserId);
     state.currentchat[state.currentchat.length] = {
       "id": newIndex,
       "chat_id": getReceiverChatIdfromUserId(receiverUserId),
@@ -654,6 +659,7 @@ const actionListeners = (state, ws) => {
             `;
     }
     let index = state.currentchat.findIndex(e => e.id == id);
+    alarmCheck(getReceiverChatIdfromUserId(receiverUserId), receiverUserId);
     state.currentchat[index] = {
       "id": id,
       "chat_id": getReceiverChatIdfromUserId(receiverUserId),
@@ -681,6 +687,32 @@ const actionListeners = (state, ws) => {
       return array[0]['id2'];
     } else {
       return array[0]['id1'];
+    }
+  }
+  function alarmCheck(chatId, userId) {
+    let index = state.arr.findIndex(e => e.chat_id == chatId);
+    if (state.arr[index]['id1'] == userId) {
+      if (state.arr[index]['alarm1']) {
+        alarmPlay();
+      }
+    } else {
+      if (state.arr[index]['alarm2']) {
+        alarmPlay();
+      }
+    }
+  }
+  function alarmPlay() {
+    var audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = '../public/wav/alarm.mp3';
+    audio.play();
+  }
+  function setFieldAlarm(chatId) {
+    let index = state.arr.findIndex(e => e.chat_id == chatId);
+    if (state.arr[index]['id1'] == state.userID) {
+      state.arr[index]['alarm2'] ? state.arr[index]['alarm2'] = 0 : state.arr[index]['alarm2'] = 1;
+    } else {
+      state.arr[index]['alarm1'] ? state.arr[index]['alarm1'] = 0 : state.arr[index]['alarm1'] = 1;
     }
   }
 
@@ -992,7 +1024,7 @@ const renderChatComponets = state => {
     // sortChatList(); Сортировка чатов по времени сообщений
     array.forEach(user => {
       if (user['id1'] == state.userID || user['id2'] == state.userID || user['id1'] == 10001) {
-        let alert = user['alert1'] === 'on' && user['id1'] == state.userID || user['alert2'] === 'on' && user['id2'] == state.userID ? "fa-bell-o" : "fa-bell-slash-o";
+        let alert = user['alarm1'] && user['id1'] == state.userID || user['alarm2'] && user['id2'] == state.userID ? "fa-bell-o" : "fa-bell-slash-o";
         layerChatList.innerHTML += `
                     <div class="sidebarleft_contact_chat" data-id="${user['chat_id']}">
                         <div class="sidebarleft_avatar">
