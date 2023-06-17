@@ -6,12 +6,7 @@
 <div class="container">
   <div class="chatwindow_header">
     <div class="header_wrapper">
-      <div class="header_avatar">
-        <img class="avatar-photo" src="../public/uploads/avatar/avatar-b.png">
-      </div>
-      <div class="header_title">
         <!-- Тут текст шапки --> 
-      </div>
     </div>
     <div class="header_right">
       <span></span>

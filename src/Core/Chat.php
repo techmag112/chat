@@ -42,34 +42,29 @@ class Chat implements MessageComponentInterface {
             if (isset($data->command)) {
                 switch ($data->command) {
                     case "subscribe":
-			if ( isset($this->userresources[$data->to]) ) {
-                            foreach ($this->userresources[$data->to] as $key => $resourceId) {
-                                if ( isset($this->users[$resourceId]) ) {
-                                    $this->subscriptions[$this->users[$resourceId]] = $data->channel;
-                                }
-                            }
-                        } else {
-			// ----------------
 	                        $this->subscriptions[$conn->resourceId] = $data->channel;
-			}
-                    break;
-                    case "unsubscribe":
-                        unset($this->subscriptions[$conn->resourceId]);
-                    break;
-                    case "groupchat":
-                        //
-                        // $conn->send(json_encode($this->subscriptions));
+                            break;
+                    case "updatelist":
                         if (isset($this->subscriptions[$conn->resourceId])) {
                             $target = $this->subscriptions[$conn->resourceId];
                             foreach ($this->subscriptions as $id=>$channel) {
                                 if ($channel == $target && $id != $conn->resourceId) {
-                                    $this->users[$id]->send($data->message);
+                                    $this->users[$id]->send($msg);
                                 }
                             }
                         }
-                    break;
+                        break;
+                    case "groupchat":
+                        if (isset($this->subscriptions[$conn->resourceId])) {
+                            $target = $this->subscriptions[$conn->resourceId];
+                            foreach ($this->subscriptions as $id=>$channel) {
+                                if ($channel == $target && $id != $conn->resourceId) {
+                                    $this->users[$id]->send($msg); //$data->message);
+                                }
+                            }
+                        }
+                        break;
                     case "message":
-                        //
                         if ( isset($this->userresources[$data->to]) ) {
                             foreach ($this->userresources[$data->to] as $key => $resourceId) {
                                 if ( isset($this->users[$resourceId]) ) {

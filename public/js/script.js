@@ -359,9 +359,9 @@ const actionListeners = (state, ws) => {
   function deleteMessage(id) {
     state.currentchat.forEach(e => {
       if (e['id'] == id && e['chat_id'] == state.currentchatid) {
-        e['message'] = setMessage(id, "<i>Сообщение удалено</i>");
+        e['message'] = setMessage(id, "Данное сообщение удалено");
         let index = state.currentchat.findIndex(e => e.id == state.currentid);
-        state.currentchat[index]["message"] = "<i>Сообщение удалено</i>";
+        state.currentchat[index]["message"] = "Данное сообщение удалено";
       }
     });
     // Сообщить серверу и другому пользователю
@@ -369,7 +369,7 @@ const actionListeners = (state, ws) => {
       command: "edit",
       to: getReceiverUserId(),
       from: state.userID,
-      message: "<i>Сообщение удалено</i>",
+      message: "Данное сообщение удалено",
       messageID: id
     };
     ws.send(JSON.stringify(post));
@@ -408,7 +408,7 @@ const actionListeners = (state, ws) => {
     const selector = "[data-id=" + '"' + id + '"]';
     divPost.querySelector(selector).innerHTML = `
           <div class="chatcontent_body chatcontent_body--my" data-id=${id}>
-              <span class="chatcontent_mymessage_text"><b>${state.username}</b>: ${status}${newmessage}</span>
+              <span class="chatcontent_mymessage_text">${state.username}: ${status}${newmessage}</span>
               <span class="chatcontent_mymessage_time">${getTimePost()}</span>
           </div>`;
     // Отправить другой стороне и в базу
@@ -433,7 +433,7 @@ const actionListeners = (state, ws) => {
     const newMessage = `
               <div class="chatcontent_mymessage_wrapper chatcontent_mymessage">
                   <div class="chatcontent_body chatcontent_body--my" data-id=${newIndex}>
-                      <span class="chatcontent_mymessage_text"><b>${state.username}</b>: ${message}</span>
+                      <span class="chatcontent_mymessage_text">${state.username}: ${message}</span>
                       <span class="chatcontent_mymessage_time">${getTimePost()}</span>
                   </div>
               </div>
@@ -456,11 +456,7 @@ const actionListeners = (state, ws) => {
   function addEditorListener() {
     listener1 = function () {
       if (inputSend.value !== '') {
-        let cleanMessage = DOMPurify.sanitize(inputSend.value, {
-          USE_PROFILES: {
-            html: true
-          }
-        });
+        let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
         if (cleanMessage == '') {
           cleanMessage = 'Удалено защитой от XSS';
         }
@@ -470,7 +466,7 @@ const actionListeners = (state, ws) => {
         if (state.currentchatid == '10001') {
           let post = {
             command: "groupchat",
-            message: "<b>" + username + "</b>: " + cleanMessage,
+            message: username + ": " + cleanMessage,
             channel: "10001"
           };
           ws.send(JSON.stringify(post));
@@ -479,7 +475,7 @@ const actionListeners = (state, ws) => {
             command: "message",
             to: getReceiverUserId(),
             from: state.userID,
-            message: "<b>" + username + "</b>: " + cleanMessage
+            message: username + ": " + cleanMessage
           };
           ws.send(JSON.stringify(post));
         }
@@ -492,11 +488,7 @@ const actionListeners = (state, ws) => {
     listener2 = e => {
       if (inputSend.value !== '' && e.key === 'Enter') {
         e.preventDefault();
-        let cleanMessage = DOMPurify.sanitize(inputSend.value, {
-          USE_PROFILES: {
-            html: true
-          }
-        });
+        let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
         if (cleanMessage == '') {
           cleanMessage = 'Удалено защитой от XSS';
         }
@@ -506,7 +498,7 @@ const actionListeners = (state, ws) => {
         if (state.currentchatid == '10001') {
           let post = {
             command: "groupchat",
-            message: "<b>" + username + "</b>: " + cleanMessage,
+            message: username + ": " + cleanMessage,
             channel: "10001"
           };
           ws.send(JSON.stringify(post));
@@ -515,7 +507,7 @@ const actionListeners = (state, ws) => {
             command: "message",
             to: getReceiverUserId(),
             from: state.userID,
-            message: "<b>" + username + "</b>: " + cleanMessage
+            message: username + ": " + cleanMessage
           };
           ws.send(JSON.stringify(post));
         }
@@ -662,6 +654,30 @@ const actionListeners = (state, ws) => {
       "id2": state.userID
     };
   }
+  function addReceiverMessageInGroupChat(message) {
+    const newIndex = getNewIndexCurrentChat(state.currentchat, 10001);
+    if (state.currentchatid == 10001) {
+      const newMessage = `
+                            <div class="chatcontent_mymessage_wrapper chatcontent_yourmessage" data-id=${newIndex}>
+                                <div class="chatcontent_body">
+                                    <span class="chatcontent_yourmessage_text">${message}</span>
+                                    <span class="chatcontent_yourmessage_time">${getTimePost()}</span>
+                                </div>
+                            </div>
+                        `;
+      chatContext.insertAdjacentHTML("beforeend", newMessage);
+    }
+    alarmCheck(10001, 10001);
+    state.currentchat[state.currentchat.length] = {
+      "id": newIndex,
+      "chat_id": 10001,
+      "sender_id": 10001,
+      "message": message,
+      "time_message": getTimePost(),
+      "id1": 10001,
+      "id2": 10001
+    };
+  }
   function modifyReceiverMessageInChat(id, receiverUserId, message) {
     if (getReceiverChatIdfromUserId(receiverUserId) == state.currentchatid) {
       const selector = "[data-id=" + '"' + id + '"]';
@@ -734,6 +750,7 @@ const actionListeners = (state, ws) => {
 
   // Обработка входящих сообщений
   ws.onmessage = e => {
+    console.log(e.data);
     let info = JSON.parse(e.data);
     console.log(info);
     switch (info.command) {
@@ -741,16 +758,20 @@ const actionListeners = (state, ws) => {
         addReceiverMessageInChat(info.message, info.from);
         break;
       case 'groupchat':
-        addReceiverMessageInChat(info.message, info.from);
+        addReceiverMessageInGroupChat(info.message);
+        break;
+      case 'updatelist':
+        console.log('list', info.message);
         break;
       case 'edit':
         modifyReceiverMessageInChat(Number(info.messageID), info.from, info.message);
         break;
       default:
-        console.log(info);
+      //console.log(info);
     }
   };
 };
+
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (actionListeners);
 
 /***/ }),
@@ -999,7 +1020,7 @@ const renderChatComponets = state => {
         chatContext.innerHTML += `
                         <div class="chatcontent_mymessage_wrapper chatcontent_mymessage" data-id=${arr["id"]}>
                             <div class="chatcontent_body chatcontent_body--my">
-                                <span class="chatcontent_mymessage_text"><b>${state.username}</b>: ${arr['message']}</span>
+                                <span class="chatcontent_mymessage_text">${state.username}: ${arr['message']}</span>
                                 <span class="chatcontent_mymessage_time">${arr['time_message']}</span>
                             </div>
                         </div>
@@ -1043,7 +1064,7 @@ const renderChatComponets = state => {
     // sortChatList(); Сортировка чатов по времени сообщений
     array.forEach(user => {
       if (user['id1'] == state.userID || user['id2'] == state.userID || user['id1'] == 10001) {
-        let alert = user['alarm1'] == 1 && user['id1'] == state.userID || user['alarm2'] == 1 && user['id2'] == state.userID ? "fa-bell-o" : "fa-bell-slash-o";
+        let alert = user['alarm1'] == 1 && user['id1'] == state.userID || user['alarm2'] == 1 && user['id2'] == state.userID || user['alarm1'] == 1 && user['id1'] == 10001 ? "fa-bell-o" : "fa-bell-slash-o";
         let email = user['email_status'] == 0 ? 'Скрыт' : user['email'];
         layerChatList.innerHTML += `
                     <div class="sidebarleft_contact_chat" data-id="${user['chat_id']}">
@@ -1055,7 +1076,7 @@ const renderChatComponets = state => {
                             </div>
                             <div class="sidebarleft_title">
                             <div class="sidebarleft_owner">
-                                <span>${user['username']} </span><i class="fa ${alert}" id="alarm"></i>
+                                <span>${user['username']} </span><i class="fa ${alert}" id="alarm"></i><span class="blink"></span> 
                             </div>
                             <div class="sidebarleft_lastpost">
                                 <span>${email}</span>
@@ -2879,8 +2900,7 @@ window.addEventListener('DOMContentLoaded', () => {
       userId: state.userID
     })); // Регистрируем пользователя в чате
     ws.send(JSON.stringify({
-      action: "subscribe",
-      to: 11,
+      command: "subscribe",
       channel: "10001"
     }));
   }, 1000);
