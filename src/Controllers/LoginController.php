@@ -200,6 +200,27 @@ class LoginController {
                                        
                         if ($this->mail->send()) {
                             // Добавить чат в контакты пользователей
+                            $column1 = $this->db->selectColumn(
+                                        'SELECT DISTINCT id1 FROM chat_list'
+                                    );
+                            $column2 = $this->db->selectColumn(
+                                        'SELECT DISTINCT id2 FROM chat_list'
+                                    );
+                            $array = array_unique(array_merge($column1, $column2));
+                            d($column1, $column2, $array);
+                            die;
+                            foreach($array as $item) {
+                                $this->db->insert(
+                                    'chat_list',
+                                    [   // set
+                                      'chat_id' => 1,
+                                      'id1' => $newIdUser,
+                                      'alarm1' => 0,
+                                      'id2' => $item,
+                                      'alarm1' => 0,
+                                      'lasttime' => ''
+                                   ]
+                             );
                             // $column = $this->db->selectColumn(
                             //     'SELECT DISTINCT chat_id FROM chat_list'
                             // );

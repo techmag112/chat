@@ -1,4 +1,5 @@
 <?php
+//namespace Tm\Chat\App;
 $_POST = json_decode( file_get_contents("php://input"), true );
 use PDO;
 $driver = "mysql";
@@ -12,3 +13,9 @@ $stmt = $pdo->prepare($sql);
 $stmt->bindValue(":group_status", $_POST["status"]);
 $stmt->bindValue(":id", $_POST["id"]);
 $stmt->execute();
+// include_once '../Core/DBChat.php';
+// try {
+//     DBChat::getListGroup($_POST["id"], $_POST["status"]);
+// } catch (Exception $e) {
+//     echo $e->getMessage();
+// }

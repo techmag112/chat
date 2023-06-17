@@ -116,6 +116,13 @@ const actionListeners = (state, ws) => {
       if (e["id"] == id) {
         e["group_status"] = status;
         stateGroupChatInDB(id, status);
+        // Синхронизация таблицы 
+        let post = {
+          command: "updatelist",
+          message: state.listgroup,
+          channel: "10001"
+        };
+        ws.send(JSON.stringify(post));
       }
     });
   }
@@ -721,6 +728,7 @@ const actionListeners = (state, ws) => {
     } else {
       state.arr[index]['alarm1'] ? state.arr[index]['alarm1'] = 0 : state.arr[index]['alarm1'] = 1;
     }
+    updateAlarm(chatId, state.arr[index]['alarm1'], state.arr[index]['alarm2']);
   }
   function stateGroupChatInDB(id, status) {
     axios({
@@ -778,6 +786,29 @@ const actionListeners = (state, ws) => {
       console.log(error);
     });
   }
+  function updateAlarm(chatid, alarm1, alarm2) {
+    axios({
+      method: 'post',
+      url: '../src/App/updatealarm.php',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      data: {
+        "chatid": chatid,
+        "alarm1": alarm1,
+        "alarm2": alarm2
+      }
+    }).then(() => {
+      console.log('Аларм успешно обновлен!');
+    }).catch(function (error) {
+      console.log(error);
+    });
+  }
+  function synchroGroupStatus(array) {
+    array.forEach((item, index) => {
+      state.listgroup[index]['group_status'] = item['group_status'];
+    });
+  }
 
   // Обработка входящих сообщений
   ws.onmessage = e => {
@@ -792,7 +823,9 @@ const actionListeners = (state, ws) => {
         addReceiverMessageInGroupChat(info.message);
         break;
       case 'updatelist':
-        console.log('list', info.message);
+        synchroGroupStatus(info.message);
+        //state.test = info.message;
+        //console.log('state.test ', state.test);
         break;
       case 'edit':
         modifyReceiverMessageInChat(Number(info.messageID), info.from, info.message);
@@ -1044,9 +1077,7 @@ const renderChatComponets = state => {
 
   function calcGroupSize() {
     let headerCount = document.querySelector(".header_info");
-    let chatList = state.arr.filter(e => {
-      return e['id1'] < 10000 && e["group_status"] == 1;
-    });
+    let chatList = state.listgroup.filter(e => e["group_status"] == 1);
     let text = ''; //state.username + '&#013;';
     chatList.forEach(e => {
       text += e['username'] + '&#013;';
@@ -1101,12 +1132,20 @@ const renderChatComponets = state => {
       return false;
     }
   }
+  function setAlarm(array) {
+    if (array['id1'] == state.userID && state.userID != 10001) {
+      return array['alarm2'] == 1 ? "fa-bell-o" : "fa-bell-slash-o";
+    } else {
+      return array['alarm1'] == 1 ? "fa-bell-o" : "fa-bell-slash-o";
+    }
+  }
   function renderChatList(array) {
     removeChatList();
     // sortChatList(); Сортировка чатов по времени сообщений
     array.forEach(user => {
       if (user['id1'] == state.userID || user['id2'] == state.userID || user['id1'] == 10001) {
-        let alert = user['alarm1'] == 1 && user['id1'] == state.userID || user['alarm2'] == 1 && user['id2'] == state.userID || user['alarm1'] == 1 && user['id1'] == 10001 ? "fa-bell-o" : "fa-bell-slash-o";
+        // let alert = ((user['alarm1'] == 1 && user['id1'] == state.userID) || (user['alarm2'] == 1 && user['id2'] == state.userID) ||  (user['alarm1'] == 1 && user['id1'] == 10001)) ? "fa-bell-o" : "fa-bell-slash-o";
+        let alarm = setAlarm(user);
         let email = user['email_status'] == 0 ? 'Скрыт' : user['email'];
         layerChatList.innerHTML += `
                     <div class="sidebarleft_contact_chat" data-id="${user['chat_id']}">
@@ -1118,7 +1157,7 @@ const renderChatComponets = state => {
                             </div>
                             <div class="sidebarleft_title">
                             <div class="sidebarleft_owner">
-                                <span>${user['username']} </span><i class="fa ${alert}" id="alarm"></i><span class="blink"></span> 
+                                <span>${user['username']} </span><i class="fa ${alarm}" id="alarm"></i><span class="blink"></span> 
                             </div>
                             <div class="sidebarleft_lastpost">
                                 <span>${email}</span>
@@ -2904,6 +2943,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // current chat id
     currentid: 0,
     // current id message
+    test: [],
     urlImg: "../public/uploads/avatar/" //"../public/uploads/avatar/"  "../assets/img/avatar/"
   };
 
