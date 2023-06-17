@@ -64,38 +64,38 @@ const actionListeners = (state, ws) => {
   function filterChatGroupList() {
     let search = document.querySelector("#search2");
     search.addEventListener("input", e => {
-      renderLeftPanel(filterUserName(e.target.value, state.arr));
+      renderLeftPanel(filterUserName(e.target.value, state.listgroup));
     });
   }
   function calcGroupSize() {
     let headerCount = document.querySelector(".header_info");
-    let chatList = state.arr.filter(e => {
-      return e['chat_id'] < 10000 && e["group_status"] == 1;
+    let chatList = state.listgroup.filter(e => {
+      return e["group_status"] == 1;
     });
-    let text = state.username + '&#013;';
+    let text = ''; //state.username + '&#013;';
     chatList.forEach(e => {
       text += e['username'] + '&#013;';
     });
     headerCount.innerHTML = '';
-    headerCount.innerHTML = `<span title="${text}">Участники: ${chatList.length + 1}</span>`;
+    headerCount.innerHTML = `<span title="${text}">Участники: ${chatList.length}</span>`;
   }
   function renderLeftPanel() {
-    let array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : state.arr;
+    let array = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : state.listgroup;
     removeLeftPanel();
     let rightarray = [];
     let leftarray = [];
     leftarray = array.filter(e => {
-      return e['chat_id'] < 10000 && e["group_status"] == 0;
+      return e["group_status"] == 0;
     });
-    rightarray = state.arr.filter(e => {
-      return e['chat_id'] < 10000 && e["group_status"] == 1;
+    rightarray = state.listgroup.filter(e => {
+      return e["group_status"] == 1;
     });
     if (state.currentchatid > 10000) {
       calcGroupSize();
     }
     leftarray.forEach(user => {
       leftPanel.innerHTML += `
-                        <div class="sidebarleft_contact_chat" data-id="${user['chat_id']}">
+                        <div class="sidebarleft_contact_chat" data-id="${user['id']}">
                             <div class="sidebarleft_avatar">
                                 <span class="avatar">
                                     <img class="avatar-photo" src="${state.urlImg}${user['avatar']}">
@@ -112,35 +112,18 @@ const actionListeners = (state, ws) => {
     renderRightPanel(rightarray);
   }
   function setState(id, status) {
-    state.arr.forEach(e => {
-      if (e["chat_id"] == id) {
+    state.listgroup.forEach(e => {
+      if (e["id"] == id) {
         e["group_status"] = status;
-        // Отправить изменение на сервер
-        if (status) {
-          let post = {
-            action: "subscribe",
-            to: id,
-            channel: "10001"
-          };
-          ws.send(JSON.stringify(post));
-        } else {
-          let post = {
-            action: "unsubscribe",
-            to: id,
-            channel: "10001"
-          };
-          ws.send(JSON.stringify(post));
-        }
-        //-----------------------------
+        stateGroupChatInDB(id, status);
       }
     });
   }
-
   function renderRightPanel(array) {
     removeRightPanel();
     array.forEach(user => {
       rightPanel.innerHTML += `
-                        <div class="sidebarleft_contact_chat" data-id="${user['chat_id']}">
+                        <div class="sidebarleft_contact_chat" data-id="${user['id']}">
                             <div class="sidebarleft_avatar">
                                 <span class="avatar">
                                     <img class="avatar-photo" src="${state.urlImg}${user['avatar']}">
@@ -166,15 +149,15 @@ const actionListeners = (state, ws) => {
       let ItemIdContext = getIdOnClick(e);
       let search = document.querySelector("#search2");
       search.value = '';
-      setState(ItemIdContext, true);
-      renderLeftPanel(state.arr, ItemIdContext);
+      setState(ItemIdContext, 1);
+      renderLeftPanel();
     });
   }
   function RightListener() {
     rightPanel.addEventListener("click", function (e) {
       let ItemIdContext = getIdOnClick(e);
-      setState(ItemIdContext, false);
-      renderLeftPanel(state.arr, ItemIdContext);
+      setState(ItemIdContext, 0);
+      renderLeftPanel();
     });
   }
   function getIdOnClick(e) {
@@ -253,6 +236,7 @@ const actionListeners = (state, ws) => {
     }
   }
   function toggleMenuOff() {
+    // Закрытие всех всплывающих окон
     if (menuState !== 0) {
       menuState = 0;
       menu.classList.remove(contextMenuActive);
@@ -331,26 +315,14 @@ const actionListeners = (state, ws) => {
     let chatContact = listContact.querySelectorAll(".sidebarleft_contact_chat");
     chatContact.forEach(item => {
       if (item.getAttribute("data-id") === id) {
-        // if ((user['id1'] == state.userID) || (user['id2'] == state.userID) || (user['id1'] == 10001)) { 
-        // let alert = ((user['alert1'] === 1 && user['id1'] == state.userID) || (user['alert2'] === 1 && user['id2'] == state.userID)) ? "fa-bell-o" : "fa-bell-slash-o";
         let alarmTag = item.querySelector("#alarm");
         if (alarmTag.className === "fa fa-bell-o") {
           alarmTag.classList.remove("fa-bell-o");
           alarmTag.classList.add("fa-bell-slash-o");
-          //state.arr.forEach((el) => {
-          //  if(el["chat_id"] == id) {
-          //    el["alert"] = "off";
-          //  }    
-          //});
           setFieldAlarm(id);
         } else {
           alarmTag.classList.remove("fa-bell-slash-o");
           alarmTag.classList.add("fa-bell-o");
-          //state.arr.forEach((el) => {
-          //  if(el["chat_id"] == id) {
-          //    el["alert"] = "on";
-          //  }    
-          //});
           setFieldAlarm(id);
         }
       }
@@ -747,6 +719,23 @@ const actionListeners = (state, ws) => {
       state.arr[index]['alarm1'] ? state.arr[index]['alarm1'] = 0 : state.arr[index]['alarm1'] = 1;
     }
   }
+  function stateGroupChatInDB(id, status) {
+    axios({
+      method: 'post',
+      url: '../src/App/putlistgroup.php',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      data: {
+        "id": id,
+        "status": status
+      }
+    }).then(() => {
+      console.log('Статусы групп чата успешно загружены!');
+    }).catch(function (error) {
+      console.log(error);
+    });
+  }
 
   // Обработка входящих сообщений
   ws.onmessage = e => {
@@ -818,6 +807,15 @@ const getState = state => {
       console.log('state.currentchat', state.currentchat);
     });
   }
+  function getListGroup() {
+    axios.get(urlQuery + `listGroup.php`).then(res => {
+      let Arr = Object.entries(res.data);
+      Arr.forEach((item, i) => {
+        setListGroup(item[1], [i]);
+      });
+      console.log('state.listgroup', state.listgroup);
+    });
+  }
   function setData(arg, field) {
     state[field] = arg;
     console.log(field, state[field]);
@@ -828,11 +826,13 @@ const getState = state => {
   function setList(arg, field) {
     state.arr[field] = arg;
   }
+  function setListGroup(arg, field) {
+    state.listgroup[field] = arg;
+  }
   getUser();
   getListChats();
-  //state.arr[state.arr.length] = {"id": state.currentchat.length + 1, "owner_id": state.userID, "chat_id": 10001, "alarm": 1, "lasttime":"", "group_status": 0, "email": "Нет", "username": "Group Chat", "avatar": "avatar-m.png", "email_status" :1};
-  //console.log('state.arr', state.arr);
   getChatMessages();
+  getListGroup();
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (getState);
 
@@ -1005,12 +1005,12 @@ const renderChatComponets = state => {
     let chatList = state.arr.filter(e => {
       return e['id1'] < 10000 && e["group_status"] == 1;
     });
-    let text = state.username + '&#013;';
+    let text = ''; //state.username + '&#013;';
     chatList.forEach(e => {
       text += e['username'] + '&#013;';
     });
     headerCount.innerHTML = '';
-    headerCount.innerHTML = `<span title="${text}">Участники: ${chatList.length + 1}</span>`;
+    headerCount.innerHTML = `<span title="${text}">Участники: ${chatList.length}</span>`;
   }
   function uploadChat(chatId) {
     removeChat();
@@ -2857,6 +2857,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // array chat list
     currentchat: [],
     // array messeges current chat
+    listgroup: [],
     currentchatid: 0,
     // current chat id
     currentid: 0,
@@ -2882,10 +2883,10 @@ window.addEventListener('DOMContentLoaded', () => {
       "id": 1,
       "chat_id": 10001,
       "id1": 10001,
-      "alarm1": 1,
+      "alarm1": 0,
       "id2": 10001,
-      "alarm2": 1,
-      "lasttime": "10:31",
+      "alarm2": 0,
+      "lasttime": "",
       "email": "нет",
       "username": "Group Chat",
       "avatar": "avatar-m.png",

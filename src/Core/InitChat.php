@@ -23,6 +23,12 @@ class InitChat {
         $_SESSION['userData'] = json_encode($user);
     }
 
+    public function getListGroup() {
+        $user = $this->db->select("SELECT id, username, avatar, group_status FROM users");
+   
+        $_SESSION['listGroup'] = json_encode($user);
+    }
+
     public function getChatList() {
         $listChat = $this->db->select("SELECT a.id, a.chat_id, a.id1, a.alarm1, a.id2, a.alarm2, a.lasttime, b.email, b.username, b.avatar, b.email_status, b.group_status FROM chat_list a JOIN users b ON ((a.id1 = ? AND a.id2 = b.id) OR (a.id2 = ? AND a.id1 = b.id))", [
             $this->auth->getUserId(),
@@ -39,5 +45,4 @@ class InitChat {
    
         $_SESSION['chatMessages'] =  json_encode($messagesChat);
     }
-
 }

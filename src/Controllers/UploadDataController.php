@@ -25,6 +25,7 @@ class UploadDataController {
             // Генерация исходных данных для чата и передача ее в форму
             session_start();
             $this->init->getUserData();
+            $this->init->getListGroup();
             $this->init->getChatList();
             $this->init->getChatMessages();  
             echo $this->templates->render('chat');

@@ -79,7 +79,7 @@
         </div>
         <div class="rightpanel">
           <div class="groupchat_header">
-            <span>Group 1</span>
+            <span>Group Chat</span>
           </div>
           <div class="chatcontacts">
 
