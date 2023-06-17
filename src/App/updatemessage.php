@@ -7,8 +7,10 @@ $database_name = "chat";
 $username = "root";
 $password = "";
 $pdo = new PDO("$driver:host=$host;dbname=$database_name", $username, $password);
-$sql = "UPDATE users SET group_status = :group_status WHERE id = :id";
+$sql = "UPDATE chat_messages SET message = :message WHERE id = :id AND chat_id = :chat_id";
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(":group_status", $_POST["status"]);
-$stmt->bindValue(":id", $_POST["id"]);
-$stmt->execute();
+$stmt->execute([
+     ":id" => $_POST["id"], 
+     ":chat_id" => $_POST["chatid"], 
+     ":message" => $_POST["message"]
+]);

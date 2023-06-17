@@ -345,6 +345,7 @@ const actionListeners = (state, ws) => {
       messageID: id
     };
     ws.send(JSON.stringify(post));
+    modifyMessageInDB(id, state.currentchatid, "Данное сообщение удалено");
   }
   function editMessage(id) {
     state.currentchat.forEach(e => {
@@ -392,6 +393,7 @@ const actionListeners = (state, ws) => {
       messageID: id
     };
     ws.send(JSON.stringify(post));
+    modifyMessageInDB(id, state.currentchatid, status + newmessage);
   }
   function getTimePost() {
     const subbed = new Date();
@@ -420,6 +422,7 @@ const actionListeners = (state, ws) => {
       "id1": state.userID,
       "id2": getReceiverUserId()
     };
+    addMessageInDB(newIndex, Number(chatID), state.userID, message, getTimePost());
   }
   function getNewIndexCurrentChat(currentchat, chatId) {
     const array = currentchat.filter(item => item['chat_id'] == chatId);
@@ -732,6 +735,45 @@ const actionListeners = (state, ws) => {
       }
     }).then(() => {
       console.log('Статусы групп чата успешно загружены!');
+    }).catch(function (error) {
+      console.log(error);
+    });
+  }
+  function addMessageInDB(id, chatid, send_id, message, time) {
+    axios({
+      method: 'post',
+      url: '../src/App/putmessage.php',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      data: {
+        "id": id,
+        "chatid": chatid,
+        "send_id": send_id,
+        "message": message,
+        "time": time
+      }
+    }).then(() => {
+      console.log('Чат-сообщение ' + message + ' успешно загружено!');
+    }).catch(function (error) {
+      console.log(error);
+    });
+  }
+  function modifyMessageInDB(id, chatid, message, time) {
+    axios({
+      method: 'post',
+      url: '../src/App/updatemessage.php',
+      headers: {
+        "Content-type": "application/json; charset=UTF-8"
+      },
+      data: {
+        "id": id,
+        "chatid": chatid,
+        "message": message,
+        "time": time
+      }
+    }).then(() => {
+      console.log('Чат-сообщение ' + message + ' успешно загружено!');
     }).catch(function (error) {
       console.log(error);
     });
