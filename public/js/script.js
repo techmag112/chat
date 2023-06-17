@@ -808,6 +808,7 @@ const actionListeners = (state, ws) => {
     array.forEach((item, index) => {
       state.listgroup[index]['group_status'] = item['group_status'];
     });
+    renderLeftPanel();
   }
 
   // Обработка входящих сообщений
