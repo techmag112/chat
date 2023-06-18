@@ -3,9 +3,16 @@
     use function Tamtamchik\SimpleFlash\flash;
     use Tm\Chat\Core\Token;
     use Tm\Chat\Core\Input;
+    use Tm\Chat\Core\Session;
 
     if(isset($message)) {
         flash()->message($message, $type);
+    } else {
+        if (Session::exists('message')) {
+            flash()->message(Session::get('message'), Session::get('type'));
+            Session::delete('message');
+            Session::delete('type');
+        }
     }
     $this->layout('template', ['title' => 'Авторизация']); 
 ?>

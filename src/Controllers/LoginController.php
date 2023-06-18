@@ -115,11 +115,7 @@ class LoginController {
                 $this->mail->Subject = 'Подтверждение регистрации в чате';
                 $this->mail->Body    = 'Для подтверждения регистрации нажмите ссылку http://localhost/verify_email?selector=' . \urlencode($selector) . '&token=' . \urlencode($token);    
                 if ($this->mail->send()) {
-                    Redirect::to('/login');
-                    echo $this->templates->render('login', [
-                        'message' => 'На указанную почту отправлено сообщение для подтверждения регистрации.',
-                        'type' => 'success'
-                    ]);
+                    Redirect::to('/login', 'На указанную почту отправлено сообщение для подтверждения регистрации.');
                 } else {
                     echo $this->templates->render('login', [
                         'message' => 'Письмо не отправлено. Ошибка Mailer-а.',
@@ -145,11 +141,7 @@ class LoginController {
     public function isConfirmRegistration() {
         try {
             $this->auth->confirmEmail($_GET['selector'], $_GET['token']);
-                Redirect::to('/login');
-                echo $this->templates->render('login', [
-                    'message' => 'Регистрация подтверждена.',
-                    'type' => 'success'
-                ]);
+                Redirect::to('/login', 'Регистрация подтверждена.');
         }
         catch (\Delight\Auth\InvalidSelectorTokenPairException $e) {
             echo $this->templates->render('login', [
@@ -226,11 +218,7 @@ class LoginController {
                                 );
                             };
                             // ------------------------------------ 
-                            Redirect::to('/login');
-                            echo $this->templates->render('login', [
-                                'message' => 'На указанную почту отправлено сообщение для подтверждения регистрации.',
-                                'type' => 'success'
-                            ]);
+                            Redirect::to('/login', 'На указанную почту отправлено сообщение для подтверждения регистрации.');
                         } else {
                             echo $this->templates->render('login', [
                                 'message' => 'Письмо не отправлено. Ошибка Mailer-а.',

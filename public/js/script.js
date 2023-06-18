@@ -115,6 +115,9 @@ const actionListeners = (state, ws) => {
     state.listgroup.forEach(e => {
       if (e["id"] == id) {
         e["group_status"] = status;
+        if (e['id'] == state.userID) {
+          state.groupStatusMyUser = status;
+        }
         stateGroupChatInDB(id, status);
         // Синхронизация таблицы 
         let post = {
@@ -302,19 +305,23 @@ const actionListeners = (state, ws) => {
   }
   function actionByRightClick(link) {
     toggleMenuOff();
-    switch (link.getAttribute("data-action")) {
-      case "switch":
-        toggleAlarm(state.currentid);
-        break;
-      case "delete":
-        deleteMessage(state.currentid);
-        break;
-      case "edit":
-        editMessage(state.currentid);
-        break;
-      case "forward":
-        forwardMessage();
-        break;
+    if (link.getAttribute("data-action") != "switch" && state.groupStatusMyUser == 0 && state.currentchatid == '10001') {
+      errorValue(".chatcontent");
+    } else {
+      switch (link.getAttribute("data-action")) {
+        case "switch":
+          toggleAlarm(state.currentid);
+          break;
+        case "delete":
+          deleteMessage(state.currentid);
+          break;
+        case "edit":
+          editMessage(state.currentid);
+          break;
+        case "forward":
+          forwardMessage(state.currentid);
+          break;
+      }
     }
   }
   function toggleAlarm(id) {
@@ -438,30 +445,35 @@ const actionListeners = (state, ws) => {
   function addEditorListener() {
     listener1 = function () {
       if (inputSend.value !== '') {
-        let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
-        if (cleanMessage == '') {
-          cleanMessage = 'Удалено защитой от XSS';
-        }
-        addMyMessageInChat(cleanMessage);
-        // Отправить другой стороне и в базу
-        let username = state.username;
-        if (state.currentchatid == '10001') {
-          let post = {
-            command: "groupchat",
-            message: username + ": " + cleanMessage,
-            channel: "10001"
-          };
-          ws.send(JSON.stringify(post));
+        if (state.groupStatusMyUser == 0 && state.currentchatid == '10001') {
+          errorValue();
         } else {
-          let post = {
-            command: "message",
-            to: getReceiverUserId(),
-            from: state.userID,
-            message: username + ": " + cleanMessage
-          };
-          ws.send(JSON.stringify(post));
+          let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
+          if (cleanMessage == '') {
+            cleanMessage = 'Удалено защитой от XSS';
+          }
+          addMyMessageInChat(cleanMessage);
+          // Отправить другой стороне и в базу
+          let username = state.username;
+          if (state.currentchatid == '10001') {
+            let post = {
+              command: "groupchat",
+              message: username + ": " + cleanMessage,
+              channel: "10001"
+            };
+            ws.send(JSON.stringify(post));
+          } else {
+            let post = {
+              command: "message",
+              to: getReceiverUserId(),
+              from: state.userID,
+              message: username + ": " + cleanMessage
+            };
+            ws.send(JSON.stringify(post));
+          }
+          // --------------------------------
         }
-        // --------------------------------
+
         inputSend.value = '';
         inputSend.focus();
       }
@@ -469,31 +481,36 @@ const actionListeners = (state, ws) => {
     btnSend.addEventListener('click', listener1);
     listener2 = e => {
       if (inputSend.value !== '' && e.key === 'Enter') {
-        e.preventDefault();
-        let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
-        if (cleanMessage == '') {
-          cleanMessage = 'Удалено защитой от XSS';
-        }
-        addMyMessageInChat(cleanMessage);
-        // Отправить другой стороне и в базу
-        let username = state.username;
-        if (state.currentchatid == '10001') {
-          let post = {
-            command: "groupchat",
-            message: username + ": " + cleanMessage,
-            channel: "10001"
-          };
-          ws.send(JSON.stringify(post));
+        if (state.groupStatusMyUser == 0 && state.currentchatid == '10001') {
+          errorValue();
         } else {
-          let post = {
-            command: "message",
-            to: getReceiverUserId(),
-            from: state.userID,
-            message: username + ": " + cleanMessage
-          };
-          ws.send(JSON.stringify(post));
+          e.preventDefault();
+          let cleanMessage = DOMPurify.sanitize(inputSend.value); //, { USE_PROFILES: { html: true } });
+          if (cleanMessage == '') {
+            cleanMessage = 'Удалено защитой от XSS';
+          }
+          addMyMessageInChat(cleanMessage);
+          // Отправить другой стороне и в базу
+          let username = state.username;
+          if (state.currentchatid == '10001') {
+            let post = {
+              command: "groupchat",
+              message: username + ": " + cleanMessage,
+              channel: "10001"
+            };
+            ws.send(JSON.stringify(post));
+          } else {
+            let post = {
+              command: "message",
+              to: getReceiverUserId(),
+              from: state.userID,
+              message: username + ": " + cleanMessage
+            };
+            ws.send(JSON.stringify(post));
+          }
+          // --------------------------------
         }
-        // --------------------------------
+
         inputSend.value = '';
         inputSend.focus();
       }
@@ -540,8 +557,9 @@ const actionListeners = (state, ws) => {
       addEditorListener();
     }
   }
-  function forwardMessage() {
+  function forwardMessage(messageid) {
     overlayDiv();
+    state.currentid = messageid;
     windowTransferFlag = true;
     windowListChatTag.classList.add('active');
     renderforwardWindow();
@@ -573,37 +591,27 @@ const actionListeners = (state, ws) => {
     });
   }
   function addForwardtListener() {
-    listForward.addEventListener("click", function (e) {
+    listForward.addEventListener( "click", function(e) {
       e.stopPropagation();
-      let ItemIdContext = getIdOnClick(e); // 
+      let ItemIdContext  =  getIdOnClick(e); // 
       state.currentchat.forEach(e => {
-        if (e['id'] == state.currentid) {
+        if(e['id'] == state.currentid) {
           let message = "Forward->" + e['message'];
-          const currentChatId = getReceiverChatIdfromMessageId(Number(ItemIdContext));
-          state.currentchat[state.currentchat.length] = {
-            "id": state.currentchat.length + 1,
-            "chat_id": currentChatId,
-            "sender_id": state.userID,
-            "message": message,
-            "time_message": getTimePost(),
-            "id1": state.userID,
-            "id2": getReceiverUserId(currentChatId)
+          state.currentchat[state.currentchat.length] = {"id": state.currentchat.length + 1, "chat_id": Number(ItemIdContext), "sender_id": state.userID, "message": message, "time_message": getTimePost(), "id1": state.userID, "id2": getReceiverUserId(Number(ItemIdContext))};
+          // Отправить другой стороне и в базу
+          let post = {
+              command: "message", 
+              to: getReceiverUserId(Number(ItemIdContext)),
+              from: state.userID, 
+              message: message
           };
-          closeOverlay();
+          ws.send(JSON.stringify(post));
+          // ------------------------------
+           closeOverlay();
         }
       });
-      // Отправить другой стороне и в базу
-      let post = {
-        command: "message",
-        to: getReceiverUserId(currentChatId),
-        from: state.userID,
-        message: message
-      };
-      ws.send(JSON.stringify(post));
-      // ------------------------------
-    });
+    });     
   }
-
   function filterForwardList() {
     search.addEventListener("input", e => {
       renderforwardWindow(filterUserName(e.target.value, state.arr));
@@ -733,7 +741,7 @@ const actionListeners = (state, ws) => {
   function stateGroupChatInDB(id, status) {
     axios({
       method: 'post',
-      url: '../src/App/putlistgroup.php',
+      url: '/putlistgroup', 
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       },
@@ -750,7 +758,7 @@ const actionListeners = (state, ws) => {
   function addMessageInDB(id, chatid, send_id, message, time) {
     axios({
       method: 'post',
-      url: '../src/App/putmessage.php',
+      url: '/putmessage',
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       },
@@ -770,7 +778,7 @@ const actionListeners = (state, ws) => {
   function modifyMessageInDB(id, chatid, message, time) {
     axios({
       method: 'post',
-      url: '../src/App/updatemessage.php',
+      url: '/updatemessage',
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       },
@@ -789,7 +797,7 @@ const actionListeners = (state, ws) => {
   function updateAlarm(chatid, alarm1, alarm2) {
     axios({
       method: 'post',
-      url: '../src/App/updatealarm.php',
+      url: '/updatealarm',
       headers: {
         "Content-type": "application/json; charset=UTF-8"
       },
@@ -807,8 +815,23 @@ const actionListeners = (state, ws) => {
   function synchroGroupStatus(array) {
     array.forEach((item, index) => {
       state.listgroup[index]['group_status'] = item['group_status'];
+      if (state.listgroup[index]['id'] == state.userID && state.groupStatusMyUser == 0 && state.listgroup[index]['group_status'] == 1) {
+        state.groupStatusMyUser = 1;
+        reRenderGroupChat();
+      }
     });
     renderLeftPanel();
+  }
+  function reRenderGroupChat() {}
+  function errorValue() {
+    let selector = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '.chatwindow_area';
+    const errorDiv = document.querySelector(selector);
+    errorDiv.style.border = '1px solid red';
+    control.style.backgroundColor = "red";
+    setTimeout(() => {
+      // Удаляем слой через 1000 мс
+      errorDiv.style.border = 'none';
+    }, 1000);
   }
 
   // Обработка входящих сообщений
@@ -856,7 +879,7 @@ const getState = state => {
   const urlQuery = '../src/App/'; //'../src/App/'  './App/'
 
   function getUser() {
-    axios.get(urlQuery + `userData.php`).then(res => {
+    axios.get('/getuserdata').then(res => {
       setData(res.data[0].id, 'userID');
       setData(res.data[0].username, 'username');
       setData(res.data[0].avatar, 'avatar');
@@ -866,7 +889,7 @@ const getState = state => {
   }
   ;
   function getListChats() {
-    axios.get(urlQuery + `chatList.php`).then(res => {
+    axios.get('/getchatlist').then(res => {
       let Arr = Object.entries(res.data);
       Arr.forEach((item, i) => {
         setList(item[1], [i]);
@@ -875,7 +898,7 @@ const getState = state => {
     });
   }
   function getChatMessages() {
-    axios.get(urlQuery + `chatMessages.php`).then(res => {
+    axios.get('/getchatmessages').then(res => {
       let Arr = Object.entries(res.data);
       Arr.forEach((item, i) => {
         setMessage(item[1], [i]);
@@ -884,7 +907,7 @@ const getState = state => {
     });
   }
   function getListGroup() {
-    axios.get(urlQuery + `listGroup.php`).then(res => {
+    axios.get('/getlistgroup').then(res => {
       let Arr = Object.entries(res.data);
       Arr.forEach((item, i) => {
         setListGroup(item[1], [i]);
@@ -905,10 +928,19 @@ const getState = state => {
   function setListGroup(arg, field) {
     state.listgroup[field] = arg;
   }
+  function setGroupStatusMyUser() {
+    state.listgroup.forEach(item => {
+      if (item['id'] == state.userID) {
+        state.groupStatusMyUser = item['group_status'];
+      }
+      console.log('state.groupStatusMyUser ', state.groupStatusMyUser);
+    });
+  }
   getUser();
+  getListGroup();
   getListChats();
   getChatMessages();
-  getListGroup();
+  setGroupStatusMyUser();
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (getState);
 
@@ -2935,6 +2967,7 @@ window.addEventListener('DOMContentLoaded', () => {
     username: "",
     // current username 
     avatar: "",
+    groupStatusMyUser: 0,
     arr: [],
     // array chat list
     currentchat: [],
@@ -2944,7 +2977,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // current chat id
     currentid: 0,
     // current id message
-    test: [],
     urlImg: "../public/uploads/avatar/" //"../public/uploads/avatar/"  "../assets/img/avatar/"
   };
 

@@ -42,7 +42,7 @@ class EditDataController {
                     if ($_POST['new_pass'] === $_POST['new_pass_again']) {
                         try {
                             $this->auth->changePassword($_POST['current_pass'], $_POST['new_pass']);
-                            Redirect::to('/');
+                            Redirect::to('/', 'Пароль успешно изменен');
                             //echo 'Password has been changed';
                         }
                         catch (\Delight\Auth\NotLoggedInException $e) {
@@ -162,7 +162,7 @@ class EditDataController {
                                     ]
                                 );
                             }
-                            Redirect::to('/');
+                            Redirect::to('/', 'Изменение успешно принято.');
                         } else {
                             $message = 'Данное имя пользователя уже существует';
                         }
