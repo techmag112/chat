@@ -199,57 +199,33 @@ class LoginController {
                     $this->mail->Body    = 'Для подтверждения регистрации нажмите ссылку http://localhost/verify_email?selector=' . \urlencode($selector) . '&token=' . \urlencode($token);
                                        
                         if ($this->mail->send()) {
-                            // Добавить чат в контакты пользователей
+                            // Добавить чат в контакты всех пользователей
+                            $newIdUser = 55;
                             $column1 = $this->db->selectColumn(
-                                        'SELECT DISTINCT id1 FROM chat_list'
-                                    );
+                                         'SELECT DISTINCT id1 FROM chat_list'
+                                     );
                             $column2 = $this->db->selectColumn(
-                                        'SELECT DISTINCT id2 FROM chat_list'
-                                    );
+                                         'SELECT DISTINCT id2 FROM chat_list'
+                                     );
                             $array = array_unique(array_merge($column1, $column2));
-                            d($column1, $column2, $array);
-                            die;
+                            $newchatid = $this->db->selectValue(
+                                'SELECT MAX(chat_id) FROM chat_list'
+                            );
                             foreach($array as $item) {
+                                $newchatid++;
                                 $this->db->insert(
-                                    'chat_list',
-                                    [   // set
-                                      'chat_id' => 1,
-                                      'id1' => $newIdUser,
-                                      'alarm1' => 0,
-                                      'id2' => $item,
-                                      'alarm1' => 0,
-                                      'lasttime' => ''
-                                   ]
-                             );
-                            // $column = $this->db->selectColumn(
-                            //     'SELECT DISTINCT chat_id FROM chat_list'
-                            // );
-                            // foreach($column as $item) {
-                            //     $this->db->insert(
-                            //         'chat_list',
-                            //         [
-                            //             // set
-                            //             'owner_id' => $newIdUser,
-                            //             'chat_id' => $item,
-                            //             'alarm' => 1,
-                            //             'lasttime' => '',
-                            //             'group_status' => 0
-                            //         ]
-                            //     );
-                            //     if ($item < 10000) {
-                            //         $this->db->insert(
-                            //             'chat_list',
-                            //             [
-                            //                 // set
-                            //                 'owner_id' => $item,
-                            //                 'chat_id' => $newIdUser,
-                            //                 'alarm' => 1,
-                            //                 'lasttime' => '',
-                            //                 'group_status' => 0
-                            //             ]
-                            //         );
-                            //     }
-                            // }
+                                     'chat_list',
+                                     [   // set
+                                       'chat_id' => $newchatid,
+                                       'id1' => $newIdUser,
+                                       'alarm1' => 0,
+                                       'id2' => $item,
+                                       'alarm1' => 0,
+                                       'lasttime' => '00:00'
+                                    ]
+                                );
+                            };
+                            // ------------------------------------ 
                             Redirect::to('/login');
                             echo $this->templates->render('login', [
                                 'message' => 'На указанную почту отправлено сообщение для подтверждения регистрации.',

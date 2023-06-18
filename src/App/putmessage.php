@@ -1,12 +1,6 @@
 <?php
 $_POST = json_decode( file_get_contents("php://input"), true );
-use PDO;
-$driver = "mysql";
-$host = "localhost";
-$database_name = "chat";
-$username = "root";
-$password = "";
-$pdo = new PDO("$driver:host=$host;dbname=$database_name", $username, $password);
+require("dbconnect.php");
 $sql = "INSERT INTO chat_messages (id, chat_id, sender_id, message, time_message) VALUES (:id, :chat_id, :sender_id, :message, :time_message)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([
