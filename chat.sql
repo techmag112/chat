@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Июн 18 2023 г., 14:23
+-- Время создания: Июн 19 2023 г., 16:52
 -- Версия сервера: 8.0.30
 -- Версия PHP: 8.1.9
 
@@ -42,9 +42,13 @@ CREATE TABLE `chat_list` (
 --
 
 INSERT INTO `chat_list` (`id`, `chat_id`, `id1`, `alarm1`, `id2`, `alarm2`, `lasttime`) VALUES
+(1, 10001, 10001, 0, 10001, 0, ''),
 (2, 2, 11, 1, 35, 0, '12:42'),
 (3, 3, 11, 0, 40, 0, '17:20'),
-(4, 4, 40, 0, 35, 0, '16:55');
+(4, 4, 40, 0, 35, 0, '16:55'),
+(5, 5, 45, 0, 11, 0, '00:00'),
+(6, 6, 45, 0, 40, 0, '00:00'),
+(7, 7, 45, 0, 35, 0, '00:00');
 
 -- --------------------------------------------------------
 
@@ -71,7 +75,15 @@ INSERT INTO `chat_messages` (`id`, `chat_id`, `sender_id`, `message`, `time_mess
 (1, 3, 11, 'Ку ку!', '11:30'),
 (2, 3, 35, 'Трам-пам-пам!', '11:43'),
 (4, 2, 11, 'Данное сообщение удалено', '15:55'),
-(5, 2, 11, 'Привет', '21:36');
+(5, 2, 11, '(ред) Привет!', '21:36'),
+(6, 2, 35, 'Yoyo!', '19:55'),
+(1, 10001, 11, 'Forward->Воу воу воу!!!', '23:11'),
+(7, 2, 11, 'Forward->Forward->Воу воу воу!!!', '14:14'),
+(2, 10001, 11, 'Всем привет!', '15:44'),
+(1, 5, 45, 'Куку!', '15:45'),
+(2, 5, 11, 'Хай!', '15:46'),
+(3, 5, 11, 'Данное сообщение удалено', '15:48'),
+(3, 10001, 35, 'Ау', '16:46');
 
 -- --------------------------------------------------------
 
@@ -101,9 +113,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `password`, `username`, `status`, `verified`, `resettable`, `roles_mask`, `registered`, `last_login`, `force_logout`, `avatar`, `email_status`, `group_status`) VALUES
-(11, 'oleg.khayrullin@gmail.com', '$2y$10$bvsd78BnXeRfIf.oPdlN6OHFGEOIRdSw4F6lDbQ07pmv1ZNYWo0/i', 'Mad Max', 0, 1, 1, 0, 1686141295, 1687067770, 0, '6486d1e111991lCWtZLo4EVY.jpg', 0, 1),
-(35, 'hairullin@cg.ru', '$2y$10$oGdf6inq/9GVDnuYknN5keB2qa.s9VTMOq4c1WtM4SaepaBFbqsri', 'Tetra', 0, 1, 1, 0, 1686324313, 1686977602, 0, '6488b98cc857eScreenshot_1.jpg', 0, 1),
-(40, 'o.khayrullin@yandex.ru', '$2y$10$ZbQPjiZ3KwKP.Hmb6kMqy.0toSu5aNhs31zJ4lUjxhtQ7r581qoG.', 'Super', 0, 1, 1, 0, 1686682325, 1686683996, 0, '6488c18b17997Screenshot_2.jpg', 0, 0);
+(11, 'oleg.khayrullin@gmail.com', '$2y$10$bvsd78BnXeRfIf.oPdlN6OHFGEOIRdSw4F6lDbQ07pmv1ZNYWo0/i', 'Mad Max', 0, 1, 1, 0, 1686141295, 1687175020, 0, '64901b4dc9f3bavatar-admin-lg.png', 0, 1),
+(35, 'hairullin@cg.ru', '$2y$10$oGdf6inq/9GVDnuYknN5keB2qa.s9VTMOq4c1WtM4SaepaBFbqsri', 'Marina', 0, 1, 1, 0, 1686324313, 1687165879, 0, '64901b049d84davatar-j.png', 0, 1),
+(40, 'o.khayrullin@yandex.ru', '$2y$10$ZbQPjiZ3KwKP.Hmb6kMqy.0toSu5aNhs31zJ4lUjxhtQ7r581qoG.', 'Harry', 0, 1, 1, 0, 1686682325, 1687165541, 0, '64901a85a1efcavatar-b.png', 1, 0),
+(45, 'lvh@inbox.ru', '$2y$10$deiQ7UiiTRD9DxcxfPV7XOUWWa3BMVPekQVTwtvuHJS/aZ6CwTHVy', 'Maria', 0, 1, 1, 0, 1687161251, 1687166212, 0, '64901a39de76eavatar-a.png', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -166,15 +179,19 @@ CREATE TABLE `users_throttling` (
 --
 
 INSERT INTO `users_throttling` (`bucket`, `tokens`, `replenished_at`, `expires_at`) VALUES
-('QduM75nGblH2CDKFyk0QeukPOwuEVDAUFE54ITnHM38', 74, 1687067770, 1687607770),
-('PZ3qJtO_NLbJfRIP-8b4ME4WA3xxc6n9nbCORSffyQ0', 3.03847, 1686727899, 1687159899),
-('HIJQJPUQ2qyyTt0Q7_AuZA0pXm27czJnqpJsoA5IFec', 49, 1686683794, 1686755794),
+('QduM75nGblH2CDKFyk0QeukPOwuEVDAUFE54ITnHM38', 64.8248, 1687175020, 1687715020),
+('PZ3qJtO_NLbJfRIP-8b4ME4WA3xxc6n9nbCORSffyQ0', 4, 1687161254, 1687593254),
+('HIJQJPUQ2qyyTt0Q7_AuZA0pXm27czJnqpJsoA5IFec', 49, 1687161748, 1687233748),
 ('-Ut0Vp3QCynjpU029BBiV9f2ilTuHcUyvTQCqFe8gEw', 29, 1686198686, 1686270686),
 ('Ibg_NFrsH6jzP-GLL7a1ecZmCQd_ADQDCKYo2A3iTMA', 29, 1686198686, 1686270686),
 ('EPoee04nBl0WR6qZ2BJz2zuCc2Lq9hpTPo4w9XQos3Q', 29, 1686324364, 1686396364),
 ('MMdFuS5yV1mq33gZ-752-rghYL6ZNvFg-uo7EHOtZ6A', 29, 1686324364, 1686396364),
 ('gWVSRGwfevGmTxRnFYjsBidB4oqBtNEhcs_HmG8u5vQ', 29, 1686683794, 1686755794),
-('qAQPCOX4DQwddkFz2pnLRSu_BJoqyiEZf6SQ0jFmAlg', 29, 1686683794, 1686755794);
+('qAQPCOX4DQwddkFz2pnLRSu_BJoqyiEZf6SQ0jFmAlg', 29, 1686683794, 1686755794),
+('U6_zXOezC8I5VXZrjZFH88ykghpWmFUgJUfbfOcyp4g', 29, 1687161748, 1687233748),
+('6aivHqjZ78KlpN7tthJQTj4Eok4Wg7DGvVIdMXy6mkQ', 29, 1687161748, 1687233748),
+('OMhkmdh1HUEdNPRi-Pe4279tbL5SQ-WMYf551VVvH8U', 19, 1687165642, 1687201642),
+('eLXDJgNAMnVU1gafljzKdfbqvT8sAVxJdyRkx2HuM8w', 499, 1687165642, 1687338442);
 
 --
 -- Индексы сохранённых таблиц
@@ -233,19 +250,19 @@ ALTER TABLE `users_throttling`
 -- AUTO_INCREMENT для таблицы `chat_list`
 --
 ALTER TABLE `chat_list`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT для таблицы `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT для таблицы `users_confirmations`
 --
 ALTER TABLE `users_confirmations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT для таблицы `users_remembered`

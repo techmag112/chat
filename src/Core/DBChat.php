@@ -101,7 +101,7 @@ class DBChat {
     }
 
     public function getChatMessages() {
-        $messagesChat = $this->db->select("SELECT a.*, b.id1, b.id2 FROM chat_messages a JOIN chat_list b ON ((a.chat_id = b.chat_id) AND (b.id1 = ? OR b.id2 = ?))", [
+        $messagesChat = $this->db->select("SELECT a.*, b.id1, b.id2 FROM chat_messages a LEFT JOIN chat_list b ON ((a.chat_id = b.chat_id) AND (b.id1 = ? OR b.id2 = ?))", [
                 $this->auth->getUserId(),
                 $this->auth->getUserId()
              ]);

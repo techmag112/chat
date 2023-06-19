@@ -1,6 +1,7 @@
 <?php 
     use function Tamtamchik\SimpleFlash\flash;
     use Tm\Chat\Core\Token;
+    use Tm\Chat\Core\Input;
     use Tm\Chat\Core\Session;
 
     if(isset($message)) {

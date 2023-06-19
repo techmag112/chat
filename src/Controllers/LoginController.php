@@ -174,7 +174,7 @@ class LoginController {
             try {
                     $username = (($_POST['username'] == '') ? 'User' . mb_substr(uniqid(), 4, 4) : $_POST['username']);
                     $userId = $this->auth->registerWithUniqueUsername($_POST['email'], $_POST['password'], $username, function ($selector, $token) {
-                        $newIdUser = $this->db->getLastInsertId();
+                    //$newIdUser = $this->db->getLastInsertId();
                     //$this->mail->SMTPDebug = 2;
                     $this->mail->CharSet = 'utf-8';
                     $this->mail->isSMTP();                                      
@@ -192,7 +192,12 @@ class LoginController {
                                        
                         if ($this->mail->send()) {
                             // Добавить чат в контакты всех пользователей
-                            $newIdUser = 55;
+                            $newIdUser = $this->db->selectValue(
+                                'SELECT user_id FROM users_confirmations WHERE id = ?',
+                                [
+                                    $this->db->getLastInsertId()
+                                ]
+                            );
                             $column1 = $this->db->selectColumn(
                                          'SELECT DISTINCT id1 FROM chat_list'
                                      );
