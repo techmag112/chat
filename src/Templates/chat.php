@@ -133,4 +133,5 @@
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="public/ws/reconnecting-websocket.min.js"></script>
 <script src="public/js/script.js"></script>

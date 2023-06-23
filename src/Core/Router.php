@@ -11,7 +11,7 @@ use League\Plates\Engine;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
-use \Tm\Chat\Controllers\DBController;
+use \Tm\Chat\Controllers\ChatController;
 use \Tm\Chat\Controllers\LoginController;
 use \Tm\Chat\Controllers\ErrorController;
 use \Tm\Chat\Controllers\EditDataController;
@@ -65,23 +65,11 @@ class Router {
              $r->addRoute('GET', '/login', ['Tm\Chat\Controllers\LoginController', 'login_form_view']);
              $r->addRoute('GET', '/logout', ['Tm\Chat\Controllers\LoginController', 'logout']);
              $r->addRoute('POST', '/login', ['Tm\Chat\Controllers\LoginController', 'login']);
-             $r->addRoute('GET', '/', ['Tm\Chat\Controllers\DBController', 'chat_view']);
              $r->addRoute('GET', '/verify_email', ['Tm\Chat\Controllers\LoginController', 'isConfirmRegistration']);
-             $r->addRoute('POST', '/putlistgroup', ['Tm\Chat\Controllers\DBController', 'putGroupStatus']);
-             $r->addRoute('GET', '/getuserdata', ['Tm\Chat\Controllers\DBController', 'getUserData']);
-             $r->addRoute('GET', '/getchatlist', ['Tm\Chat\Controllers\DBController', 'getChatList']);
-             $r->addRoute('GET', '/getchatmessages', ['Tm\Chat\Controllers\DBController', 'getChatMessages']);
-             $r->addRoute('GET', '/getlistgroup', ['Tm\Chat\Controllers\DBController', 'getGroupStatus']);
-             $r->addRoute('POST', '/putmessage', ['Tm\Chat\Controllers\DBController', 'putMessage']);
-             $r->addRoute('POST', '/updatalarm', ['Tm\Chat\Controllers\DBController', 'updateAlarm']);
-             $r->addRoute('POST', '/updatemessage', ['Tm\Chat\Controllers\DBController', 'updateMessage']);
+             $r->addRoute('GET', '/', ['Tm\Chat\Controllers\ChatController', 'chat_view']);
+             $r->addRoute('GET', '/get/{action:\w+}', ['Tm\Chat\Controllers\ChatController', 'actionDB']);
+             $r->addRoute('POST', '/post/{action:\w+}', ['Tm\Chat\Controllers\ChatController', 'actionDB']);
         
-             
-            // $r->addRoute('GET', '/about', ['Tm\Task5\Controllers\HomeController', 'about']);
-             // {id} must be a number (\d+)
-            // $r->addRoute('GET', '/user/{id:\d+}', 'get_user_handler');
-             // The /{title} suffix is optional
-            // $r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
          });
         
         // // Fetch method and URI from somewhere
@@ -106,7 +94,7 @@ class Router {
              case FastRoute\Dispatcher::FOUND:
                  $handler = $routeInfo[1];
                  $vars = $routeInfo[2];
-                 $container->call($handler, $vars);
+                 $container->call($handler, [$vars]);
                  break;
         }    
     }
