@@ -374,7 +374,7 @@ const actionListeners = (state, ws) => {
   function addWindowEditListener() {
     windowEditTag.querySelector('.chatmessage_send').addEventListener('click', e => {
       closeOverlay();
-      let index = state.currentchat.findIndex(e => e.id == state.currentid);
+      let index = state.currentchat.findIndex(e => e.id == state.currentid && e.chat_id == state.currentchatid);
       state.currentchat[index]["message"] = windowEditTag.querySelector('.chatwindow_newMessageInput').value;
       setMessage(state.currentid, windowEditTag.querySelector('.chatwindow_newMessageInput').value, '(ред) ');
       e.stopPropagation();
@@ -383,7 +383,7 @@ const actionListeners = (state, ws) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         closeOverlay();
-        let index = state.currentchat.findIndex(e => e.id == state.currentid);
+        let index = state.currentchat.findIndex(e => e.id == state.currentid && e.chat_id == state.currentchatid);
         state.currentchat[index]["message"] = windowEditTag.querySelector('.chatwindow_newMessageInput').value;
         setMessage(state.currentid, windowEditTag.querySelector('.chatwindow_newMessageInput').value, '(ред) ');
         e.stopPropagation();
@@ -394,19 +394,29 @@ const actionListeners = (state, ws) => {
     let status = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
     const selector = "[data-id=" + '"' + id + '"]';
     divPost.querySelector(selector).innerHTML = `
-          <div class="chatcontent_body chatcontent_body--my" data-id=${id}>
+          <div class="chatcontent_body chatcontent_body--my">
               <span class="chatcontent_mymessage_text">${state.username}: ${status}${newmessage}</span>
               <span class="chatcontent_mymessage_time">${getTimePost()}</span>
           </div>`;
     // Отправить другой стороне и в базу
-    let post = {
-      command: "edit",
-      to: getReceiverUserId(),
-      from: state.userID,
-      message: status + newmessage,
-      messageID: id
-    };
-    ws.send(JSON.stringify(post));
+    if (state.currentchatid == '10001') {
+      let post = {
+        command: "updatemessage",
+        message: status + newmessage,
+        channel: "10001",
+        messageID: id
+      };
+      ws.send(JSON.stringify(post));
+    } else {
+      let post = {
+        command: "edit",
+        to: getReceiverUserId(),
+        from: state.userID,
+        message: status + newmessage,
+        messageID: id
+      };
+      ws.send(JSON.stringify(post));
+    }
     modifyMessageInDB(id, state.currentchatid, status + newmessage);
   }
   function getTimePost() {
@@ -592,8 +602,8 @@ const actionListeners = (state, ws) => {
       let forwardChatId = getIdOnClick(e);
       let message = '';
       state.currentchat.forEach(e => {
-        if (e['id'] == state.currentid) {
-          message = "Forward->" + e['message'];
+        if ((e['id'] == state.currentid) && (e['chat_id'] == state.currentchatid)) {
+          message = state.username + ": Forward->" + e['message'];
         }
       });
       const newIndex = getNewIndexCurrentChat(state.currentchat, forwardChatId);
@@ -686,27 +696,26 @@ const actionListeners = (state, ws) => {
       "id2": 10001
     };
   }
-  function modifyReceiverMessageInChat(id, receiverUserId, message) {
-    if (getReceiverChatIdfromUserId(receiverUserId) == state.currentchatid) {
+  function modifyReceiverMessageInChat(id, receiverUserId, message, groupchat = false) {
+    //let groupchat = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+    if (groupchat && state.currentchatid == 10001 || getReceiverChatIdfromUserId(receiverUserId) == state.currentchatid) {
       const selector = "[data-id=" + '"' + id + '"]';
       divPost.querySelector(selector).innerHTML = `
-              <div class="chatcontent_mymessage_wrapper chatcontent_yourmessage" data-id=${id}>
-                <div class="chatcontent_body">
+              <div class="chatcontent_body">
                   <span class="chatcontent_yourmessage_text">${message}</span>
                   <span class="chatcontent_yourmessage_time">${getTimePost()}</span>
-                </div>
               </div>
             `;
     }
     let index = state.currentchat.findIndex(e => e.id == id);
-    alarmCheck(getReceiverChatIdfromUserId(receiverUserId), receiverUserId);
+    alarmCheck(groupchat ? 10001 : getReceiverChatIdfromUserId(receiverUserId), receiverUserId);
     state.currentchat[index] = {
       "id": id,
-      "chat_id": getReceiverChatIdfromUserId(receiverUserId),
+      "chat_id": groupchat ? 10001 : getReceiverChatIdfromUserId(receiverUserId),
       "sender_id": receiverUserId,
       "message": message,
       "time_message": getTimePost(),
-      "id1": receiverUserId,
+      "id1": groupchat ? 10001 : receiverUserId,
       "id2": state.userID
     };
   }
@@ -867,6 +876,10 @@ const actionListeners = (state, ws) => {
       case 'updatelist':
         console.log(info);
         synchroGroupStatus(info.message);
+        break;
+      case 'updatemessage':
+        console.log(info);
+        modifyReceiverMessageInChat(Number(info.messageID), 10001, info.message, true);
         break;
       case 'edit':
         console.log(info);
@@ -1327,6 +1340,7 @@ let state = {
   // current chat id
   currentid: 0,
   // current id message
+  statusreg: false,
   urlImg: "../public/uploads/avatar/" //"../public/uploads/avatar/"  "../assets/img/avatar/"
 };
 
@@ -1345,7 +1359,6 @@ state.arr[0] = {
   "group_status": 0
 };
 window.addEventListener('DOMContentLoaded', () => {
- 
   (0,_modules_getState__WEBPACK_IMPORTED_MODULE_0__["default"])(state).then(function () {
     return (0,_modules_hamburger__WEBPACK_IMPORTED_MODULE_1__["default"])();
   }).then(function () {
@@ -1356,37 +1369,43 @@ window.addEventListener('DOMContentLoaded', () => {
     registerToWS(state.userID);
     console.log('Upload Init Data Done!');
   });
-
+  const status = document.querySelector('.status');
   const ws = new ReconnectingWebSocket("ws://localhost:8090");
   ws.debug = true;
   ws.timeoutInterval = 3000;
-  
   ws.onopen = () => {
     // Открываем канал с сервером чата
+    status.classList.remove('off');
+    status.classList.add('on');
     console.log("Websocket connection established! ");
-  };  
-
+    registerToWS(state.userID);
+  };
   ws.onclose = () => {
+    state.statusreg = false;
+    status.classList.remove('on');
+    status.classList.add('off');
     console.log("Websocket connection closed");
   };
-
   ws.onerror = error => {
+    status.classList.remove('on');
+    status.classList.add('off');
     console.log(error);
   };
-
   function registerToWS(id) {
     // Регистрируем пользователя в чате
+    if (id != '' && state.statusreg === false && ws.readyState == 1) {
       ws.send(JSON.stringify({
         command: "register",
         userId: id
-      })); 
+      }));
       ws.send(JSON.stringify({
         command: "subscribe",
         channel: "10001"
       }));
+      state.statusreg = true;
       console.log('Reg ' + id + ' ok!');
+    }
   }
-
 });
 })();
 

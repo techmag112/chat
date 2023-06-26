@@ -687,3 +687,17 @@ top: calc(50% + 5px);
   border: none;
   font-size: 15px;
 }
+
+.status {
+  border: 1px solid black;
+  text-align: center;
+  font-weight: bold;
+}
+
+.off {
+  background: red;
+}
+
+.on {
+  background: greenyellow;
+}

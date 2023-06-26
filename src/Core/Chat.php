@@ -54,6 +54,16 @@ class Chat implements MessageComponentInterface {
                             }
                         }
                         break;
+                    case "updatemessage":
+                        if (isset($this->subscriptions[$conn->resourceId])) {
+                            $target = $this->subscriptions[$conn->resourceId];
+                            foreach ($this->subscriptions as $id=>$channel) {
+                                if ($channel == $target && $id != $conn->resourceId) {
+                                    $this->users[$id]->send($msg);
+                                }
+                            }
+                        }
+                        break;
                     case "groupchat":
                         if (isset($this->subscriptions[$conn->resourceId])) {
                             $target = $this->subscriptions[$conn->resourceId];

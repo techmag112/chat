@@ -31,6 +31,7 @@
     <div class="sidebarleft_body">
           <!-- Тут список чатов -->
     </div>
+    <div class="status off">Чат-сервер</div>
   </div>
   <div class="chatwindow_editor">
     <div class="chatwindow_area">
