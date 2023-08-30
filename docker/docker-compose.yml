@@ -1,0 +1,80 @@
+# версия синтаксиса
+version: "3"
+services:
+  chat-server:
+    # Если нет секции build, то система будет искать образ в репозиториях
+    build:
+      context: ./fpm
+      dockerfile: Dockerfile
+    image: myapp/php2 # имя будущего образа
+    container_name: chat-server # имя контейнера после запуска
+    links:
+      - mysql
+    ports:
+       - 8090:8090
+    volumes:
+       - ./code:/var/www/html
+       - /var/www/html/vendor
+    #command: /bin/bash -c "php chat-server.php"
+    # мы можем создать для контейнеров внутреннюю сеть
+    networks:
+      - chat-network
+ 
+  #контейнер с Nginx
+  webserver2:
+  #  build:
+  #    context: ./nginx
+  #    dockerfile: Dockerfile
+  #  image: myapp/nginx
+    image: nginx:latest
+    container_name: webserver2
+    volumes:
+       - ./code:/var/www/html
+       - /var/www/html/vendor
+       - ./nginx:/etc/nginx/conf.d
+    links:
+       - chat-server
+    # проброс портов
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - chat-network
+
+  # контейнер с phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin:latest 
+    container_name: phpmyadmin2
+    environment:
+      PMA_HOST: db2
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    depends_on:
+      - mysql
+    networks:
+      - chat-network        
+ 
+  # контейнер с MySQL
+  # строим на базе стандартного образа
+  mysql:
+    image: mysql:latest
+    container_name: db2
+    ports:
+      - "3400:3306"
+    # описываем, какую БД мы создаём
+    environment:
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_USER: $MYSQL_USER
+      MYSQL_PASSWORD: $MYSQL_PASS
+    volumes:
+      - ./dbdata:/var/lib/mysql  
+      - ./data:/docker-entrypoint-initdb.d
+    networks:
+      - chat-network
+networks:
+  chat-network:
+    driver: bridge

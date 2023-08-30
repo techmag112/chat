@@ -23,7 +23,7 @@ class Router {
          $builder = new ContainerBuilder();
          $builder->addDefinitions([
              Engine::class => function() { 
-                 return new Engine('src/Templates');
+                 return new Engine('../src/Templates');
              },
 
              PHPMailer::class => function() {
@@ -32,10 +32,10 @@ class Router {
 
              PDO::class => function() {
                  $driver = "mysql";
-                 $host = "localhost";
+                 $host = "db2";
                  $database_name = "chat";
-                 $username = "root";
-                 $password = "";
+                 $username = "admin";
+                 $password = "12345";
                  $mypdo = new PDO("$driver:host=$host;dbname=$database_name", $username, $password);
                  return $mypdo;
              },

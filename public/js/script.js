@@ -753,7 +753,7 @@ const actionListeners = (state, ws) => {
   function alarmPlay() {
     var audio = new Audio();
     audio.preload = 'auto';
-    audio.src = '../public/wav/alarm.mp3';
+    audio.src = '../wav/alarm.mp3';
     audio.play();
   }
   function setFieldAlarm(chatId) {
@@ -1341,7 +1341,7 @@ let state = {
   currentid: 0,
   // current id message
   statusreg: false,
-  urlImg: "../public/uploads/avatar/" //"../public/uploads/avatar/"  "../assets/img/avatar/"
+  urlImg: "../uploads/avatar/" //"../public/uploads/avatar/"  "../assets/img/avatar/"
 };
 
 state.arr[0] = {

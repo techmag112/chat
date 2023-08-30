@@ -19,5 +19,5 @@
     <hr>
 
 <div class="container">
-    <img src="public/css/404.jpg" class="img-fluid"> 
+    <img src="css/404.jpg" class="img-fluid"> 
 </div>
