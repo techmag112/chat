@@ -3,7 +3,7 @@
 Сделано в качестве практического задания на курсе **PHP**
 
 ### Примененные технологии
-* PHP, ООП, JS, Gulp, Webpack, Bootstrap 5.3.
+* PHP, Websocket, JS, Gulp, Webpack, Bootstrap 5.3.
 
 ### Реализованный функционал
 
