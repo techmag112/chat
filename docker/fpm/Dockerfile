@@ -31,10 +31,5 @@ RUN composer install \
 WORKDIR /var/www/html
 EXPOSE 8090
 RUN composer dump-autoload --optimize
- 
-#CMD ["php-fpm"]
-CMD ["/usr/bin/supervisord"]
 
-#EXPOSE 8090
-#COPY chat-server.php /var/www/html
-#ENTRYPOINT ["/bin/bash", "php-fpm /var/www/html/chat-server.php"]
+CMD ["/usr/bin/supervisord"]
